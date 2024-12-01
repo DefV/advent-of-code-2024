@@ -3,8 +3,8 @@ struct Lists {
     list2: Vec<i32>,
 }
 
-impl From<String> for Lists {
-    fn from(s: String) -> Self {
+impl From<&String> for Lists {
+    fn from(s: &String) -> Self {
         let (list1, list2) = s
             .lines()
             .map(|line| {
@@ -35,6 +35,12 @@ impl Lists {
             acc + (list2[i] - x).abs()
         })
     }
+
+    fn similarity_score(&self) -> i32 {
+        self.list1.iter().fold(0, |acc, x| {
+            acc + x * self.list2.iter().filter(|y| x == *y ).count() as i32
+        })
+    }
 }
 
 fn main() {
@@ -50,24 +56,35 @@ fn main() {
     let document =
         std::fs::read_to_string(filename).expect("Something went wrong reading the file");
 
-    println!("Part 1 result: {}", part1(document));
+    println!("Part 1 result: {}", part1(&document));
+    println!("Part 2 result: {}", part2(&document));
 }
 
-fn part1(document: String) -> String {
+fn part1(document: &String) -> String {
     return Lists::from(document).distance().to_string();
+}
+
+fn part2(document: &String) -> String {
+    return Lists::from(document).similarity_score().to_string();
 }
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_part1() {
-        let example = "3   4
+    // Example data from AoC
+const EXAMPLE: &str =  "3   4
 4   3
 2   5
 1   3
 3   9
 3   3";
 
-        assert_eq!("11", super::part1(example.to_string()));
+    #[test]
+    fn test_part1() {
+        assert_eq!("11", super::part1(&EXAMPLE.to_string()));
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!("31", super::part2(&EXAMPLE.to_string()));
     }
 }
