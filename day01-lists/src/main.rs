@@ -32,7 +32,7 @@ impl Lists {
         let (list1, list2) = self.sorted();
 
         list1.iter().enumerate().fold(0, |acc, (i, x)| {
-            acc + (list2[i] - x).abs()
+            acc + x.abs_diff(list2[i]) as i32
         })
     }
 
