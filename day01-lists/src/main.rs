@@ -22,8 +22,8 @@ impl Lists {
     fn sorted(&self) -> (Vec<i32>, Vec<i32>) {
         let mut list1 = self.list1.clone();
         let mut list2 = self.list2.clone();
-        list1.sort();
-        list2.sort();
+        list1.sort_unstable();
+        list2.sort_unstable();
 
         (list1, list2)
     }
