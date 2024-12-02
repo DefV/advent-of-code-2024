@@ -9,12 +9,12 @@ impl From<&str> for Report {
             .filter_map(|s| s.parse().ok())
             .collect();
 
-        Report { levels }
+        Self { levels }
     }
 }
 
 impl Report {
-    fn str_is_safe(levels: &Vec<i32>) -> bool {
+    fn str_is_safe(levels: &[i32]) -> bool {
         let differences: Vec<i32> = levels
         .windows(2)
         .map(|window| window[1] - window[0])
@@ -25,7 +25,7 @@ impl Report {
     }
 
     fn is_safe(&self) -> bool {
-        return Report::str_is_safe(&self.levels);
+        Report::str_is_safe(&self.levels)
     }
 
     fn is_dampened_safe(&self) -> bool {
