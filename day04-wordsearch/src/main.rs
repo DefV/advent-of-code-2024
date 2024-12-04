@@ -22,26 +22,22 @@ impl Puzzle {
     fn word_count(&self, word: &str) -> u32 {
         let start = word.chars().next().unwrap();
 
-        (0..self.grid.len())
-            .flat_map(|x| (0..self.grid[x].len()).map(move |y| (x, y)))
-            .filter(|&(x, y)| self.char_at(x as isize, y as isize) == Some(start))
-            .flat_map(|(x, y)| self.words_from(x as isize, y as isize, word.len()))
+        self.positions()
+            .filter(|&(x, y)| self.char_at(x, y) == Some(start))
+            .flat_map(|(x, y)| self.words_from(x, y, word.len()))
             .filter(|found_word| found_word == word)
             .count() as u32
     }
 
     // Just hardcode we're looking for the MAS cross
     fn cross_count(&self) -> u32 {
-        (0..self.grid.len())
-            .flat_map(|x| (0..self.grid[x].len()).map(move |y| (x, y)))
-            .filter(|&(x, y)| self.char_at(x as isize, y as isize) == Some('A'))
+        self.positions()
+            .filter(|&(x, y)| self.char_at(x, y) == Some('A'))
             .filter(|&(x, y)| {
-                let (x, y) = (x as isize, y as isize);
                 let lt = self.char_at(x - 1, y - 1);
                 let rt = self.char_at(x + 1, y - 1);
                 let lb = self.char_at(x - 1, y + 1);
                 let rb = self.char_at(x + 1, y + 1);
-
 
                 match (lt, rb, lb, rt) {
                     (Some('M'), Some('S'), Some('M'), Some('S')) => true,
@@ -74,6 +70,12 @@ impl Puzzle {
 
     fn char_at(&self, x: isize, y: isize) -> Option<char> {
         self.grid.get(x as usize)?.get(y as usize).copied()
+    }
+
+    fn positions(&self) -> impl Iterator<Item = (isize, isize)> {
+        let rows = self.grid.len() as isize;
+        let cols = self.grid.first().map_or(0, |row| row.len()) as isize;
+        (0..rows).flat_map(move |x| (0..cols).map(move |y| (x, y)))
     }
 }
 
