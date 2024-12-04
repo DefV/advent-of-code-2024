@@ -2,7 +2,6 @@ type Grid = Vec<Vec<char>>;
 
 struct Puzzle {
     grid: Grid,
-    size: (isize, isize),
 }
 
 const DIRECTIONS: [(isize, isize); 8] = [
@@ -14,30 +13,21 @@ const DIRECTIONS: [(isize, isize); 8] = [
 impl From<&str> for Puzzle {
     fn from(input: &str) -> Self {
         let grid: Grid = input.lines().map(|l| l.chars().collect() ).collect();
-        let size = (grid.len() as isize, grid[0].len() as isize);
 
-        Self { grid, size }
+        Self { grid }
     }
 }
 
 impl Puzzle {
     fn word_count(&self, word: &str) -> u32 {
-        let mut count: u32 = 0;
         let start = word.chars().next().unwrap();
 
-        for x in 0..self.size.0 {
-            for y in 0..self.size.1 {
-                if self.char_at(x, y) == Some(start) {
-                    for found_word in self.words_from(x, y, word.len()).iter() {
-                        if found_word == word {
-                            count += 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        count
+        (0..self.grid.len())
+            .flat_map(|x| (0..self.grid[x].len()).map(move |y| (x, y)))
+            .filter(|&(x, y)| self.char_at(x as isize, y as isize) == Some(start))
+            .flat_map(|(x, y)| self.words_from(x as isize, y as isize, word.len()))
+            .filter(|found_word| found_word == word)
+            .count() as u32
     }
 
     fn words_from(&self, x: isize, y: isize, len: usize) -> Vec<String> {
@@ -59,12 +49,7 @@ impl Puzzle {
     }
 
     fn char_at(&self, x: isize, y: isize) -> Option<char> {
-        if x >= 0 && x < self.size.0 &&
-           y >= 0 && y < self.size.1 {
-            Some(self.grid[x as usize][y as usize])
-        } else {
-            None
-        }
+        self.grid.get(x as usize)?.get(y as usize).copied()
     }
 }
 
