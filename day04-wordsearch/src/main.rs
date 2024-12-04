@@ -50,22 +50,12 @@ impl Puzzle {
             .count() as u32
     }
 
-    fn words_from(&self, x: isize, y: isize, len: usize) -> Vec<String> {
-        DIRECTIONS.iter().map(|(dx, dy)| {
-            let mut letters = vec![];
-            for n in 0..len as isize {
-                let lx = x + dx * n;
-                let ly = y + dy * n;
-
-                if let Some(c) = self.char_at(lx, ly) {
-                    letters.push(c);
-                } else {
-                    break;
-                }
-            }
-
-            String::from_iter(letters.into_iter())
-        }).collect()
+    fn words_from(&self, x: isize, y: isize, len: usize) -> impl Iterator<Item = String> + '_ {
+        DIRECTIONS.iter().filter_map(move |&(dx, dy)| {
+            (0..len as isize)
+                .map(|n| self.char_at(x + dx * n, y + dy * n))
+                .collect()
+        })
     }
 
     fn char_at(&self, x: isize, y: isize) -> Option<char> {
