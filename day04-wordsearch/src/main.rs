@@ -39,13 +39,13 @@ impl Puzzle {
                 let lb = self.char_at(x - 1, y + 1);
                 let rb = self.char_at(x + 1, y + 1);
 
-                match (lt, rb, lb, rt) {
-                    (Some('M'), Some('S'), Some('M'), Some('S')) => true,
-                    (Some('S'), Some('M'), Some('S'), Some('M')) => true,
-                    (Some('M'), Some('S'), Some('S'), Some('M')) => true,
-                    (Some('S'), Some('M'), Some('M'), Some('S')) => true,
-                    _ => false,
-                }
+                matches!(
+                    (lt, rb, lb, rt),
+                    (Some('M'), Some('S'), Some('M'), Some('S')) |
+                    (Some('S'), Some('M'), Some('S'), Some('M')) |
+                    (Some('M'), Some('S'), Some('S'), Some('M')) |
+                    (Some('S'), Some('M'), Some('M'), Some('S'))
+                )
             })
             .count() as u32
     }
