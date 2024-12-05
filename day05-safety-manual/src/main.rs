@@ -48,12 +48,34 @@ impl Puzzle {
         })
     }
 
-    fn valid_updates(&self) -> Vec<Update> {
+    fn checked_updates(&self, valid: bool) -> Vec<&Update> {
         self.updates
             .iter()
-            .filter(|update| self.is_valid(update))
-            .cloned()
+            .filter(|update| self.is_valid(update) == valid)
             .collect()
+    }
+
+    fn correct_update(&self, update: &Update) -> Update {
+        let update_set: HashMap<&usize, usize> = update
+            .iter()
+            .enumerate()
+            .map(|(idx, val)| (val, idx))
+            .collect();
+        let relevant_rules: Vec<&OrderingRule> = self
+            .rules
+            .iter()
+            .filter(|(l, r)| update_set.contains_key(&l) && update_set.contains_key(&r))
+            .collect();
+
+        let mut corrected_update = update.clone();
+        corrected_update.sort_by(|a, b| {
+            relevant_rules
+                .iter()
+                .find(|(l, r)| a == l && b == r)
+                .map(|_| std::cmp::Ordering::Less)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        corrected_update
     }
 }
 
@@ -61,10 +83,23 @@ fn main() {
     let input = aoc::input();
 
     println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
 }
 
 fn part1(input: &str) -> u32 {
-    Puzzle::from(input).valid_updates().iter()
+    Puzzle::from(input)
+        .checked_updates(true)
+        .iter()
+        .map(|update| update[update.len() / 2] as u32)
+        .sum::<u32>()
+}
+
+fn part2(input: &str) -> u32 {
+    let puzzle = Puzzle::from(input);
+    puzzle
+        .checked_updates(false)
+        .iter()
+        .map(|update| puzzle.correct_update(update))
         .map(|update| update[update.len() / 2] as u32)
         .sum::<u32>()
 }
