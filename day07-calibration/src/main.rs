@@ -31,9 +31,7 @@ fn add(a: u64, b: u64) -> Option<u64> {
 }
 
 fn combine(a: u64, b: u64) -> Option<u64> {
-    let mut digits = a.to_string();
-    digits.push_str(&b.to_string());
-    digits.parse().ok()
+    Some(a * 10u64.pow((b as f64).log10().ceil() as u32) + b)
 }
 
 impl Calibration {
