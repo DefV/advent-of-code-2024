@@ -1,4 +1,5 @@
 use std::time::Instant;
+use rayon::prelude::*;
 
 struct Calibration {
     result: u64,
@@ -65,7 +66,7 @@ fn main() {
     let input = aoc::input();
 
     let total: u64 = input
-        .lines()
+        .par_lines()
         .map(Calibration::from)
         .filter(Calibration::is_solvable)
         .map(|calibration| calibration.result)
