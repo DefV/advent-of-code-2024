@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 struct Calibration {
     result: u64,
     numbers: Vec<u64>,
@@ -19,14 +21,34 @@ impl From<&str> for Calibration {
     }
 }
 
-impl Calibration {
-    fn try_all_operations(total: u64, numbers: Vec<u64>) -> Vec<u64> {
-        if let Some(number) = numbers.first() {
-            let mut results = vec![];
-            let rest = numbers[1..].to_vec();
+fn mul(a: u64, b: u64) -> Option<u64> {
+    a.checked_mul(b)
+}
 
-            results.extend(Self::try_all_operations(total + number, rest.clone()));
-            results.extend(Self::try_all_operations(total * number, rest.clone()));
+fn add(a: u64, b: u64) -> Option<u64> {
+    a.checked_add(b)
+}
+
+fn combine(a: u64, b: u64) -> Option<u64> {
+    let mut digits = a.to_string();
+    digits.push_str(&b.to_string());
+    digits.parse().ok()
+}
+
+impl Calibration {
+    fn try_all_operations(total: u64, max: &u64, numbers: &[u64]) -> Vec<u64> {
+        if *max < total {
+            return vec![];
+        }
+        if let Some((number, rest)) = numbers.split_first() {
+            let mut results = vec![];
+
+            for operation in [mul, add, combine] {
+                if let Some(result) = operation(total, *number) {
+                    results.extend(Self::try_all_operations(result, max,rest));
+                }
+            };
+
             results
         } else {
             vec![total]
@@ -34,11 +56,12 @@ impl Calibration {
     }
 
     fn is_solvable(&self) -> bool {
-        Self::try_all_operations(self.numbers[0], self.numbers[1..].to_vec()).contains(&self.result)
+        Self::try_all_operations(self.numbers[0], &self.result,&self.numbers[1..]).contains(&self.result)
     }
 }
 
 fn main() {
+    let start = Instant::now();
     let input = aoc::input();
 
     let total: u64 = input
@@ -48,7 +71,7 @@ fn main() {
         .map(|calibration| calibration.result)
         .sum();
 
-    println!("Total: {}", total);
+    println!("Total: {} in {:?}", total, start.elapsed());
 }
 
 #[cfg(test)]
