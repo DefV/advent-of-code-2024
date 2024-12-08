@@ -64,17 +64,15 @@ impl Map {
     }
 
     fn antinodes(&self) -> Vec<Location> {
-        self.antennas.iter().flat_map(|(_, antennas)| {
+        self.antennas.values().flat_map(|antennas| {
             self.antinodes_for(antennas)
         }).collect()
     }
 
     fn placeable_antinodes(&self) -> HashSet<Location> {
-        HashSet::from_iter(
-            self.antinodes().iter().filter(|(x, y)| {
-                self.point_at(*x, *y).is_some()
-            }).cloned()
-        )
+        self.antinodes().iter().filter(|(x, y)| {
+            self.point_at(*x, *y).is_some()
+        }).cloned().collect()
     }
 }
 
