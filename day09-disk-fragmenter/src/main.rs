@@ -45,9 +45,7 @@ impl Diskmap {
         while let Some(block) = map.pop_front() {
             match block {
                 Block::File(length, idx) => {
-                    for _ in 0..length {
-                        result.push(idx);
-                    }
+                    result.extend(vec![idx; length as usize]);
                 }
                 Block::Free(length) => {
                     for _ in 0..length {
@@ -126,8 +124,8 @@ impl Diskmap {
         }
 
         result.iter().flat_map(|b| match b {
-            Block::File(size, idx) => (0..*size).map(|_| *idx).collect::<Vec<u32>>(),
-            Block::Free(size) => (0..*size).map(|_| 0).collect::<Vec<u32>>(),
+            Block::File(size, idx) => vec![*idx; *size as usize],
+            Block::Free(size) => vec![0; *size as usize],
         }).collect()
     }
 }
