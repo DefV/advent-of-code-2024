@@ -26,6 +26,11 @@ impl From<&str> for Diskmap {
 }
 
 impl Diskmap {
+    fn checksum(blocks: &[u32]) -> u64 {
+        blocks.iter().enumerate().fold(0 as u64, |acc, (i, v)| {
+            acc + i as u64 * *v as u64
+        })
+    }
     fn reformat(self) -> Vec<u32> {
         let mut map = VecDeque::from(self.map);
         let mut result = vec![];
@@ -71,16 +76,13 @@ impl Diskmap {
 
         result
     }
-
 }
 fn main() {
     let input = aoc::input();
     let input =input.trim();
 
     let diskmap = Diskmap::from(input);
-    let result = diskmap.reformat().iter().enumerate().fold(0 as u64, |acc, (i, v)| {
-        acc + i as u64 * *v as u64
-    });
+    let result = Diskmap::checksum(&diskmap.reformat());
 
     println!("Part 1 checksum: {}", result);
 }
