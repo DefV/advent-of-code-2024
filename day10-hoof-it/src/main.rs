@@ -61,6 +61,10 @@ impl Trails {
     fn score(&self) -> usize {
         self.trail_starts.iter().map(|start| self.trail_score(start)).sum()
     }
+
+    fn rating(&self) -> usize {
+        self.trail_starts.iter().map(|start| self.reachable_ends(start).len() ).sum()
+    }
 }
 
 fn main() {
@@ -68,6 +72,7 @@ fn main() {
     let trails = Trails::from(input.as_str());
 
     println!("Part 1: {}", trails.score());
+    println!("Part 2: {}", trails.rating());
 }
 
 #[cfg(test)]
@@ -106,5 +111,12 @@ mod tests {
         let trails = Trails::from(EXAMPLE);
 
         assert_eq!(36, trails.score());
+    }
+
+    #[test]
+    fn test_rating() {
+        let trails = Trails::from(EXAMPLE);
+
+        assert_eq!(81, trails.rating());
     }
 }
