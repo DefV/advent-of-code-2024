@@ -34,28 +34,25 @@ impl Trails {
 
     fn reachable_ends(&self, trail_start: &Point) -> Vec<Point> {
         let (x, y) = *trail_start;
-
         let current = self.grid[x][y];
 
-        DIRECTIONS.iter().flat_map(|(dx, dy)| {
-            if let Some((next, next_pos)) = self.moved(x, y, *dx, *dy) {
-                if *next == current + 1 {
-                    if *next == 9 {
-                        return vec![next_pos];
+        DIRECTIONS.iter().flat_map(|&(dx, dy)| {
+            self.moved(x, y, dx, dy).and_then(|(&next, next_pos)| {
+                if next == current + 1 {
+                    if next == 9 {
+                        Some(vec![next_pos])
                     } else {
-                        return self.reachable_ends(&next_pos);
+                        Some(self.reachable_ends(&next_pos))
                     }
                 } else {
-                    return vec![];
+                    None
                 }
-            }
-
-            vec![]
+          }).unwrap_or_default()
         }).collect()
     }
 
     fn trail_score(&self, trail_start: &Point) -> usize {
-        self.reachable_ends(trail_start).iter().unique().count()
+        self.reachable_ends(trail_start).into_iter().unique().count()
     }
 
     fn score(&self) -> usize {
