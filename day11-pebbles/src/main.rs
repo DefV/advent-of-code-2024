@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
 struct Stones {
     stones: Vec<u64>,
@@ -15,7 +15,7 @@ impl From<&str> for Stones {
 
 impl Stones {
     fn blink(&mut self, n: u32, queue: Option<Vec<u64>>) -> u64 {
-        let queue = queue.or(Some(self.stones.clone())).unwrap();
+        let queue = queue.unwrap_or(self.stones.clone());
 
         queue.iter().map(|&stone| {
             if let Some(&count) = self.cache.get(&(stone, n)) {
@@ -48,7 +48,7 @@ impl Stones {
             return vec![left_stone, right_stone]
         }
 
-        return vec![stone * 2024]
+        vec![stone * 2024]
     }
 }
 
