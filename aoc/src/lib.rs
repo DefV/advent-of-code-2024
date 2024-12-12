@@ -1,14 +1,26 @@
 pub type Point = (usize, usize);
 
+#[derive(Debug)]
 pub struct Map<T> {
     pub data: Vec<Vec<T>>
 }
 
-const DIRECTIONS: [(isize, isize); 4] = [
-    (-1, 0),
-    (1, 0),
-    (0, -1),
-    (0, 1),
+const CARDINAL_DIRECTIONS: [(isize, isize); 4] = [
+    (-1, 0), // Top
+    (0, 1), // Right
+    (1, 0), // Bottom
+    (0, -1), // Left
+];
+
+const ALL_DIRECTIONS: [(isize, isize); 8] = [
+    (-1, 0), // Top
+    (-1, 1), // Top Right
+    (0, 1), // Right
+    (1, 1), // Bottom Right
+    (1, 0), // Bottom
+    (1, -1), // Bottom Left
+    (0, -1), // Left
+    (-1, -1), // Top Left
 ];
 
 impl From<&str> for Map<char> {
@@ -22,24 +34,32 @@ impl From<&str> for Map<char> {
 impl<T> Map<T> {
     pub fn at_point(&self, point: Point) -> Option<&T> {
         let (x, y) = point;
-        self.data.get(y).and_then(|row| row.get(x))
+        self.data.get(x).and_then(|row| row.get(y))
     }
 
     pub fn at(&self, x: usize, y: usize) -> Option<&T> {
         self.at_point((x, y))
     }
 
-    pub fn neighbours(&self, point: Point) -> [(Point, Option<&T>);4] {
+    pub fn cardinal_neighbours(&self, point: Point) -> [(Point, Option<&T>);4] {
         let (x, y) = point;
-        DIRECTIONS.map(|(dx, dy)| {
+        CARDINAL_DIRECTIONS.map(|(dx, dy)| {
+            let np = ((x as isize + dx) as usize, (y as isize + dy) as usize);
+            (np, self.at_point(np))
+        })
+    }
+
+    pub fn all_neighbours(&self, point: Point) -> [(Point, Option<&T>);8] {
+        let (x, y) = point;
+        ALL_DIRECTIONS.map(|(dx, dy)| {
             let np = ((x as isize + dx) as usize, (y as isize + dy) as usize);
             (np, self.at_point(np))
         })
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (Point, &T)> {
-        self.data.iter().enumerate().flat_map(|(y, row)| {
-            row.iter().enumerate().map(move |(x, item)| ((x, y), item))
+        self.data.iter().enumerate().flat_map(|(x, row)| {
+            row.iter().enumerate().map(move |(y, item)| ((x, y), item))
         })
     }
 }
