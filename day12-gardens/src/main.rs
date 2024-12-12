@@ -1,8 +1,5 @@
 use aoc::{Map, Point};
-use std::{
-    collections::{HashSet, VecDeque},
-    vec,
-};
+use std::collections::HashSet;
 
 #[derive(Debug)]
 struct Plot {
@@ -46,9 +43,9 @@ impl Input {
         let mut area = 0;
         let mut perimeter = 0;
         let mut corners = 0;
-        let mut to_explore: VecDeque<Point> = VecDeque::from(vec![start]);
+        let mut to_explore: Vec<Point> = vec![start];
 
-        while let Some(point) = to_explore.pop_front() {
+        while let Some(point) = to_explore.pop() {
             if !seen.insert(point) {
                 continue;
             }
@@ -66,7 +63,7 @@ impl Input {
 
                 match neighbor {
                     Some(c) if c == letter => {
-                        to_explore.push_front(np);
+                        to_explore.push(np);
 
                         if let (Some(next_char), Some(diagonal_char)) = (next_neighbor, diagonal) {
                             if next_char == letter && diagonal_char != letter {
@@ -74,18 +71,12 @@ impl Input {
                             }
                         }
                     }
-                    Some(_) => {
+                    _ => {
                         perimeter += 1;
 
                         // Check inner corner
                         if next_neighbor.is_none() || next_neighbor.unwrap() != letter {
                             area_corners += 1
-                        }
-                    }
-                    None => {
-                        perimeter += 1;
-                        if next_neighbor.is_none() || next_neighbor.unwrap() != letter {
-                            area_corners += 1;
                         }
                     }
                 }
