@@ -1,3 +1,7 @@
+use core::fmt;
+use std::thread;
+use std::time::Duration;
+
 use aoc::Point;
 
 struct Robot {
@@ -30,12 +34,37 @@ impl Robot {
     }
 }
 
+struct Floor<'a> {
+    size: (usize, usize),
+    positions: &'a Vec<Point>
+}
+
+impl <'a> fmt::Display for Floor<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for y in 0..self.size.1 {
+            for x in 0..self.size.0 {
+                if self.positions.contains(&(x, y)) {
+                    write!(f, "x")?;
+                } else {
+                    write!(f, "-")?;
+                }
+            }
+            write!(f, "\n")?;
+        }
+
+        Ok(())
+    }
+}
+
+const GRID_HEIGHT: usize = 101;
+const GRID_WIDTH: usize = 103;
+
 fn main() {
     let input = aoc::input();
 
-    // let grid_size = (11, 7);
-    let grid_size = (101, 103);
-    let positions: Vec<Point> = input.lines().map(Robot::from).map(|r| r.position_after(100, grid_size)).collect();
+    let grid_size = (GRID_HEIGHT, GRID_WIDTH);
+    let robots: Vec<Robot> = input.lines().map(Robot::from).collect();
+    let positions: Vec<Point> = robots.iter().map(|r| r.position_after(100, grid_size)).collect();
 
     let mut ranges: [usize; 4] = [0; 4];
     for &(x, y) in positions.iter() {
@@ -53,6 +82,29 @@ fn main() {
     let safety_factor: usize = ranges.iter().product();
 
     println!("Part 1: {}", safety_factor);
+
+    // Let's find a christmas three
+    let mut steps = 0;
+    loop {
+        let positions: Vec<Point> = robots.iter().map(|r| r.position_after(steps, grid_size)).collect();
+
+        // Count the maximum number of robots on 1 line
+        let &maximum_on_line = positions.iter().fold([0; GRID_HEIGHT], |mut acc, &(x, y)| {
+            acc[x] += 1;
+            acc
+        }).iter().max().unwrap();
+
+        if maximum_on_line >= 34 {
+            let floor = Floor { positions: &positions, size: grid_size };
+            println!("{}", floor);
+            println!("Step: {}", steps);
+            print!("\x1b[2J\x1b[H");
+            thread::sleep(Duration::from_millis(1000));
+        }
+
+        steps += 1;
+    }
+
 }
 
 #[cfg(test)]
