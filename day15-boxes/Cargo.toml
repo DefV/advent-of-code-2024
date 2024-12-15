@@ -1,0 +1,7 @@
+[package]
+name = "day15-boxes"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aoc = { path = "../aoc" }
