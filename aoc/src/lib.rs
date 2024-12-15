@@ -69,8 +69,13 @@ impl<T> Map<T> {
         self.at_point((x, y))
     }
 
+    pub fn set(&mut self, x: usize, y: usize, value: T) {
+        self.data[x][y] = value;
+    }
+
     pub fn set_point(&mut self, point: Point, value: T) {
-        self.data[point.0][point.1] = value;
+        let (x, y) = point;
+        self.set(x, y, value);
     }
 
     pub fn cardinal_neighbours(&self, point: Point) -> [(Point, Option<&T>); 4] {
