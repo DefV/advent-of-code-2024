@@ -10,6 +10,8 @@ pub fn move_point_by(point: Point, dx: isize, dy: isize) -> Point {
 #[derive(Debug)]
 pub struct Map<T> {
     pub data: Vec<Vec<T>>,
+    pub width: usize,
+    pub height: usize,
 }
 
 const CARDINAL_DIRECTIONS: [(isize, isize); 4] = [
@@ -35,12 +37,15 @@ where
     T: From<char>,
 {
     fn from(input: &str) -> Self {
-        let data = input
+        let data: Vec<Vec<T>> = input
             .lines()
             .map(|line| line.chars().map(T::from).collect())
             .collect();
 
-        Map { data }
+        let height = data.len();
+        let width = data[0].len();
+
+        Map { data, width, height }
     }
 }
 
