@@ -87,30 +87,61 @@ impl From<&str> for Maze {
 
 impl Maze {
     fn cheapest_path(&self) -> u32 {
-        let mut weights: HashMap<(usize, usize, Direction), u32> = HashMap::new();
+        let mut weights: HashMap<(usize, usize, Direction), (u32, Vec<(usize, usize, Direction)>, Vec<Vec<(usize, usize)>>)> = HashMap::new();
         let mut queue = vec![(self.position, 0u32)];
 
         while let Some(((x, y, direction), weight)) = queue.pop() {
             let splits = self.reachable_splits(x, y, direction);
-            for (new_x, new_y, new_dir, new_weight) in splits {
-                if let Some(&existing_weight) = weights.get(&(new_x, new_y, new_dir)) {
-                    if weight + new_weight >= existing_weight {
+            for (new_x, new_y, new_dir, new_weight, path) in splits {
+                if let Some((existing_weight, sources, existing_paths)) = weights.get_mut(&(new_x, new_y, new_dir)) {
+                    if weight + new_weight > *existing_weight {
+                        continue;
+                    } else if weight + new_weight == *existing_weight {
+                        sources.push((x, y, direction));
+                        existing_paths.push(path);
                         continue;
                     }
                 }
 
-                weights.insert((new_x, new_y, new_dir), weight + new_weight);
+                weights.insert((new_x, new_y, new_dir), (weight + new_weight, vec![(x, y, direction)], vec![path]));
                 queue.push(((new_x, new_y, new_dir), weight + new_weight));
             }
         }
 
-        weights.iter().filter_map(|((x, y, _), weight)| {
+        let mut end_routes: Vec<(u32, Vec<(usize, usize, Direction)>, Vec<Vec<(usize, usize)>>)> = weights.iter().filter_map(|((x, y, dir), (weight, sources, paths))| {
             if (*x, *y) == self.end {
-                Some(*weight)
+                Some((*weight, sources.clone(), paths.clone()))
             } else {
                 None
             }
-        }).min().unwrap()
+        }).collect();
+        end_routes.sort_by_key(|(weight, _, _)| *weight);
+        let mut visited_points: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
+        let mut visited_sources: std::collections::HashSet<(usize, usize, Direction)> = std::collections::HashSet::new();
+        let (weight, sources, paths) = end_routes.first().unwrap();
+        let mut sources_to_follow = sources.clone();
+        paths.iter().for_each(|path| {
+            path.iter().for_each(|point| {
+                visited_points.insert(*point);
+            });
+        });
+
+        while let Some(source) = sources_to_follow.pop()  {
+            if !visited_sources.insert(source) {
+                continue;
+            }
+            if let Some((_, sources, paths)) = weights.get(&source) {
+                sources_to_follow.extend(sources.clone());
+                paths.iter().for_each(|path| {
+                    path.iter().for_each(|point| {
+                        visited_points.insert(*point);
+                    });
+                });
+            }
+        };
+
+        dbg!(visited_points.len() + 1);
+        *weight
     }
 
     fn reachable_splits(
@@ -118,15 +149,17 @@ impl Maze {
         x: usize,
         y: usize,
         direction: Direction,
-    ) -> Vec<(usize, usize, Direction, u32)> {
-        let mut splits = Vec::new();
+    ) -> Vec<(usize, usize, Direction, u32, Vec<(usize, usize)>)> {
+        let mut splits: Vec<(usize, usize, Direction, u32, Vec<(usize, usize)>)> = Vec::new();
 
         for (point, dir) in self.corridors_at(x, y, direction) {
             let mut weight = if direction == dir { 1 } else { 1001 };
             let mut point = point;
             let mut dir = dir;
+            let mut visited = vec![(x, y)];
 
             loop {
+                visited.push(point);
                 let next = self.corridors_at(point.0, point.1, dir);
                 if next.len() == 1 {
                     weight += if next[0].1 == dir { 1 } else { 1001 };
@@ -134,13 +167,15 @@ impl Maze {
                     dir = next[0].1;
 
                     if self.map.at_point(point) == Some(&Tile::End) {
-                        splits.push((point.0, point.1, dir, weight));
+                        splits.push((point.0, point.1, dir, weight, visited));
                         break;
                     }
                 } else if next.len() == 0 {
                     break;
                 } else {
-                    splits.push((point.0, point.1, dir, weight));
+                    for (_, ndir) in next {
+                        splits.push((point.0, point.1, ndir, if ndir != dir { weight + 1000 } else { weight }, visited.clone()));
+                    }
                     break;
                 }
             }
