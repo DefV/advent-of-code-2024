@@ -74,13 +74,6 @@ impl Default for MemorySpace {
     }
 }
 
-fn manhattan_distance(a: Point, b: Point) -> u32 {
-    let (x1, y1) = a;
-    let (x2, y2) = b;
-
-    ((x1 as i32 - x2 as i32).abs() + (y1 as i32 - y2 as i32).abs()) as u32
-}
-
 impl MemorySpace {
     fn shortest_path(&self, end_point: Point) -> Option<u32> {
         let mut queue: BinaryHeap<Node> = BinaryHeap::new();
