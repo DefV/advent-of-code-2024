@@ -64,6 +64,17 @@ where
     }
 }
 
+impl<T> Default for Map<T>
+{
+    fn default() -> Self {
+        Map {
+            data: Vec::new(),
+            width: 0,
+            height: 0,
+        }
+    }
+}
+
 impl<T> Map<T> {
     pub fn at_point(&self, point: Point) -> Option<&T> {
         let (x, y) = point;
