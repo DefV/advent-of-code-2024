@@ -40,7 +40,6 @@ impl PartialOrd for Node {
 
 struct MemorySpace {
     incoming_bytes: Vec<Point>,
-    position: Point,
     map: Map<Tile>,
 }
 
@@ -70,13 +69,12 @@ impl Default for MemorySpace {
     fn default() -> Self {
         Self {
             incoming_bytes: Vec::new(),
-            position: (0, 0),
             map: Map::default(),
         }
     }
 }
 
-fn brooklyn_distance(a: Point, b: Point) -> u32 {
+fn manhattan_distance(a: Point, b: Point) -> u32 {
     let (x1, y1) = a;
     let (x2, y2) = b;
 
@@ -91,7 +89,7 @@ impl MemorySpace {
         queue.push(Node {
             position: (0, 0),
             cost_so_far: 0,
-            estimated_total_cost: brooklyn_distance((0, 0), end_point),
+            estimated_total_cost: manhattan_distance((0, 0), end_point),
         });
 
         while let Some(Node {
@@ -112,7 +110,7 @@ impl MemorySpace {
             for (neighbor, tile) in self.map.cardinal_neighbours(position) {
                 if let Some(Tile::Empty) = tile {
                     let new_cost = cost_so_far + 1;
-                    let estimated_total_cost = new_cost + brooklyn_distance(neighbor, end_point);
+                    let estimated_total_cost = new_cost + manhattan_distance(neighbor, end_point);
 
                     queue.push(Node {
                         position: neighbor,
