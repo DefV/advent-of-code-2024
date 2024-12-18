@@ -130,6 +130,7 @@ impl MemorySpace {
 fn main() {
     let input = aoc::input();
     part1(input.trim());
+    part2(input.trim());
 }
 
 const MAP_SIZE: usize = 71;
@@ -150,4 +151,26 @@ fn part1(input: &str) {
     println!("{}", memory_space.map);
     let shortest_path = memory_space.shortest_path((MAP_SIZE - 1, MAP_SIZE - 1));
     println!("Part 1: {:?}", shortest_path);
+}
+
+fn part2(input: &str) {
+    let mut memory_space: MemorySpace = input.into();
+
+    memory_space.map = Map {
+        width: MAP_SIZE,
+        height: MAP_SIZE,
+        data: vec![vec![Tile::Empty; MAP_SIZE]; MAP_SIZE],
+    };
+
+    for &(x, y) in &memory_space.incoming_bytes[..BYTES + 1] {
+        memory_space.map.set(x as usize, y as usize, Tile::Wall);
+    }
+
+    let mut idx = BYTES + 1;
+    while let Some(_) = memory_space.shortest_path((MAP_SIZE - 1, MAP_SIZE - 1)) {
+        let (x, y) = memory_space.incoming_bytes[idx + 1];
+        memory_space.map.set(x as usize, y as usize, Tile::Wall);
+        idx += 1;
+    }
+    println!("Part 2: {:?}", memory_space.incoming_bytes[idx]);
 }
