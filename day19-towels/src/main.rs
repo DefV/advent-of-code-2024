@@ -18,29 +18,33 @@ impl<'a> From<&'a str> for Puzzle<'a> {
 }
 
 impl<'a> Puzzle<'a> {
-    fn makeable_towels(&self) -> Vec<&'a str> {
-        let mut makeable_cache: HashMap<&'a str, bool> = HashMap::new();
+    fn makeable_options(&self) -> Vec<u64> {
+        let mut makeable_cache: HashMap<&'a str, u64> = HashMap::new();
         self.towels
             .iter()
             .copied()
-            .filter(|towel| dbg!(self.is_makeable(towel, &mut makeable_cache)))
+            .map(|towel| self.makeable_ways(towel, &mut makeable_cache))
             .collect()
     }
 
-    fn is_makeable(&self, towel: &'a str, cache: &mut HashMap<&'a str, bool>) -> bool {
-        if let Some(&result) = cache.get(towel) {
-            return result;
+    fn makeable_ways(&self, towel: &'a str, cache: &mut HashMap<&'a str, u64>) -> u64 {
+        if let Some(&ways) = cache.get(towel) {
+            return ways;
         }
 
-        let result = self.options.iter().any(|option| {
+        if towel.is_empty() {
+            return 1;
+        }
+
+        let result = self.options.iter().map(|option| {
             if towel.starts_with(option) {
                 let remaining = &towel[option.len()..];
-                if remaining.is_empty() || self.is_makeable(remaining, cache) {
-                    return true;
-                }
+
+                self.makeable_ways(remaining, cache)
+            } else {
+                0
             }
-            false
-        });
+        }).sum();
 
         cache.insert(towel, result);
         result
@@ -51,5 +55,6 @@ fn main() {
     let input = aoc::input();
     let puzzle: Puzzle = input.as_str().into();
 
-    println!("Part 1: {}", puzzle.makeable_towels().len());
+    println!("Part 1: {}", puzzle.makeable_options().iter().filter(|&&count| count > 0).count());
+    println!("Part 2: {}", puzzle.makeable_options().iter().sum::<u64>());
 }
