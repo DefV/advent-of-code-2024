@@ -1,4 +1,4 @@
-use std::{collections::BinaryHeap, fmt};
+use std::fmt;
 
 use aoc::{Map, Point};
 
@@ -56,42 +56,22 @@ impl From<&str> for Track {
     }
 }
 
-#[derive(PartialEq, Eq)]
-struct RacePosition {
-    position: Point,
-    cheats: usize,
-    visited: Vec<Point>,
-    time: usize,
-}
-
-impl Ord for RacePosition {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.time.cmp(&other.time)
-    }
-}
-
-impl PartialOrd for RacePosition {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 impl Track {
     fn times_per_positon(&self) -> Vec<Vec<usize>> {
         let mut position = self.start;
         let mut tiles_left = self.length;
-        let mut times = vec![vec![0; self.map.height]; self.map.width];
+        let mut times = vec![vec![usize::MAX; self.map.height]; self.map.width];
 
         loop {
             times[position.0][position.1] = tiles_left;
-            tiles_left -= 1;
-
             if tiles_left == 0 {
                 break;
             }
+            tiles_left -= 1;
+
 
             for (np, tile) in self.map.cardinal_neighbours(position) {
-                if times[np.0][np.1] > 0 {
+                if times[np.0][np.1] != usize::MAX {
                     // We already visited this position
                     continue;
                 }
@@ -106,62 +86,36 @@ impl Track {
         times
     }
 
-    const MIN_TIME_TO_SAVE: usize = 100;
     fn completion_times(&self, cheats: usize) -> Vec<usize> {
         let mut times = vec![];
-        let mut queue: BinaryHeap<RacePosition> = BinaryHeap::from([RacePosition {
-            position: self.start,
-            cheats: cheats,
-            visited: vec![self.start],
-            time: 0,
-        }]);
-
         let times_per_position = self.times_per_positon();
 
-        while let Some(RacePosition { position, time , cheats, visited}) = queue.pop() {
-            for (np, tile) in self.map.cardinal_neighbours(position) {
-                let mut visited = visited.clone();
-                if visited.contains(&np) {
-                    continue;
-                } else {
-                    visited.push(np);
-                }
+        for (point, tile) in self.map.iter() {
+            if matches!(tile, Tile::Racetrack | Tile::Start) {
+                let normal_time = times_per_position[point.0][point.1];
 
-                match tile {
-                    Some(Tile::Racetrack) => {
-                        if cheats == 0 {
-                            let calculated_time = time + 1 + times_per_position[np.0][np.1];
+                // Draw a cheat-size diamond around this point and see if there's time to save
+                for i in 0..=cheats * 2 {
+                    for j in 0..=cheats * 2 {
+                        let distance = i.abs_diff(cheats) + j.abs_diff(cheats);
 
-                            if calculated_time < self.length {
-                                times.push(calculated_time);
+                        if distance <= cheats {
+                            let x = point.0.wrapping_add_signed(i as isize - cheats as isize);
+                            let y = point.1.wrapping_add_signed(j as isize - cheats as isize);
+
+                            if let Some(cheat_time) =
+                                times_per_position.get(x).and_then(|row| row.get(y))
+                            {
+                                if *cheat_time == usize::MAX {
+                                    continue;
+                                }
+                                let new_time = *cheat_time + distance;
+                                if normal_time > new_time {
+                                    times.push(normal_time - new_time);
+                                }
                             }
-
-                            continue;
-                        }
-
-                        queue.push(RacePosition {
-                            position: np,
-                            time: time + 1,
-                            cheats,
-                            visited
-                        });
-                    },
-                    Some(Tile::Finish) => {
-                        if time + 1 < self.length {
-                            times.push(time + 1);
-                        }
-                    },
-                    Some(Tile::Wall) => {
-                        if cheats > 0 {
-                            queue.push(RacePosition {
-                                position: np,
-                                time: time + 1,
-                                cheats: cheats - 1,
-                                visited: visited
-                            });
                         }
                     }
-                    _ => (),
                 }
             }
         }
@@ -175,9 +129,7 @@ fn main() {
     let track = Track::from(input.trim());
 
     println!("Track:\n{}", track.map);
-    let completion_times = track.completion_times(1);
-    for time in &completion_times {
-        println!("Time saved: {}", track.length - time);
-    }
-    println!("Completion times: {:?}", completion_times.iter().filter(|&t| track.length - t >= 100).count());
+
+    println!("Part 1: {}", track.completion_times(2).iter().filter(|&t| *t >= 100).count());
+    println!("Part 2: {}", track.completion_times(20).iter().filter(|&t| *t >= 100).count());
 }
