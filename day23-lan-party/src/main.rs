@@ -1,6 +1,4 @@
-use std::collections::{HashMap,HashSet, VecDeque};
-use std::convert::TryInto;
-use std::net;
+use std::collections::{HashMap,HashSet};
 
 type Address = String;
 
@@ -15,8 +13,8 @@ impl From<&str> for Puzzle {
 
         for line in input.lines() {
             let (left, right) = line.split_once("-").unwrap();
-            let left: Address = left.try_into().unwrap();
-            let right: Address = right.try_into().unwrap();
+            let left: Address = left.into();
+            let right: Address = right.into();
 
             connections.entry(left.clone()).or_insert_with(Vec::new).push(right.clone());
             connections.entry(right).or_insert_with(Vec::new).push(left);
