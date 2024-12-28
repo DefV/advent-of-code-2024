@@ -1,4 +1,4 @@
-use std::collections::{HashMap,HashSet};
+use std::collections::{HashMap,HashSet, VecDeque};
 use std::convert::TryInto;
 use std::net;
 
@@ -58,6 +58,37 @@ impl Puzzle {
 
         networks
     }
+
+    fn bron_kerbosch(&self, r: Vec<Address>, p: Vec<Address>, x: Vec<Address>, cliques: &mut Vec<Vec<Address>>) {
+        if p.is_empty() && x.is_empty() {
+            cliques.push(r);
+            return;
+        }
+
+        let mut p = p.clone();
+        let mut x = x.clone();
+
+        while let Some(v) = p.pop() {
+            let mut r = r.clone();
+            r.push(v.clone());
+
+            let neighbors = self.connections.get(&v).unwrap();
+            let p = p.iter().filter(|address| neighbors.contains(address)).cloned().collect();
+            let next_x: Vec<Address> = x.iter().filter(|address| neighbors.contains(address)).cloned().collect();
+
+            self.bron_kerbosch(r, p, next_x, cliques);
+
+            x.push(v);
+        }
+    }
+
+    fn max_cliques(&self) -> Vec<Address> {
+        let mut cliques: Vec<Vec<Address>> = Vec::new();
+        self.bron_kerbosch(vec![], self.connections.keys().cloned().collect(), vec![], &mut cliques);
+
+        let longest = cliques.iter().max_by_key(|clique| clique.len()).unwrap();
+        longest.clone()
+    }
 }
 
 fn main() {
@@ -67,4 +98,9 @@ fn main() {
     let size = puzzle.networks_of_size(3).iter().filter(|network| network.iter().any(|address| address[0..1].eq("t") )).count();
 
     println!("Part 1: {}", size);
+
+    let mut longest = puzzle.max_cliques();
+    longest.sort();
+
+    println!("Part 2: {}", longest.join(","));
 }
